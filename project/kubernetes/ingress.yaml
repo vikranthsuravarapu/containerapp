@@ -1,0 +1,57 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: brickmaster-ingress
+  namespace: viktest
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Uncomment the next line if you need to rewrite /plots/api/* to /api/* for your backend
+    # nginx.ingress.kubernetes.io/rewrite-target: /api/$2
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - c-square.co.in
+      secretName: brickmaster-tls
+  rules:
+    - host: c-square.co.in
+      http:
+        paths:
+          # ACME challenge for Let's Encrypt
+          - path: "/.well-known/acme-challenge"
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: brickmaster-service
+                port:
+                  number: 80
+
+          # Plots backend API
+          # If your backend expects /plots/api/*, leave as is.
+          # If your backend expects /api/*, use ImplementationSpecific and rewrite-target annotation.
+          - path: /plots/api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: plots-backend-service
+                port:
+                  number: 3000
+
+          # Plots frontend (SPA)
+          - path: "/plots/"
+            pathType: Prefix
+            backend:
+              service:
+                name: plots-frontend-service
+                port:
+                  number: 80
+
+          # Main app catch-all
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: brickmaster-service
+                port:
+                  number: 80

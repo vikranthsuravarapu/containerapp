@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+Dockerfile*
+docker-compose*
+postgres-secret.yaml
+project/kubernetes/postgres-secret.yaml

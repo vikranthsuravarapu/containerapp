@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: brickmaster-tls
+  namespace: viktest
+spec:
+  secretName: brickmaster-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: c-square.co.in
+  dnsNames:
+    - c-square.co.in
+  usages:
+    - digital signature
+    - key encipherment
+  renewBefore: 360h

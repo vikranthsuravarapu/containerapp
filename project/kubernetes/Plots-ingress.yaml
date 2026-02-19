@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: plots-frontend-ingress
+  namespace: viktest
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - c-square.co.in
+      secretName: brickmaster-tls
+  rules:
+    - host: c-square.co.in
+      http:
+        paths:
+          - path: /plots/
+            pathType: Prefix
+            backend:
+              service:
+                name: plots-frontend-service
+                port:
+                  number: 80

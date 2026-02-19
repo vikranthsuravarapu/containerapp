@@ -1,0 +1,97 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: GCP-Auth  # Contains GCP_SA_KEY
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+
+- script: |
+    echo "Installing Google Cloud SDK..."
+    curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-441.0.0-linux-x86_64.tar.gz
+    tar -xf google-cloud-sdk-*.tar.gz
+    ./google-cloud-sdk/install.sh --quiet
+    source ./google-cloud-sdk/path.bash.inc
+  displayName: 'Install Google Cloud SDK'
+
+- script: |
+    echo "Installing GKE Auth Plugin (manual method)..."
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+    sudo apt-get update
+    sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
+    echo "export USE_GKE_GCLOUD_AUTH_PLUGIN=True" >> ~/.bashrc
+    source ~/.bashrc
+  displayName: 'Install GKE Auth Plugin (Reliable)'
+
+- script: |
+    echo "$GCP_SA_KEY" > gcp-key.json
+    gcloud auth activate-service-account --key-file=gcp-key.json
+    gcloud config set project $GCP_PROJECT
+    gcloud container clusters get-credentials $GKE_CLUSTER_NAME --zone $GKE_ZONE --project $GCP_PROJECT
+
+  displayName: 'Authenticate to GCP'
+  env:
+    GCP_SA_KEY: $(GCP_SA_KEY)
+
+- script: |
+    echo "Installing Helm..."
+    curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+  displayName: 'Install Helm'
+
+- script: |
+    helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    helm repo update
+    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+      --namespace ingress-nginx \
+      --create-namespace
+  displayName: 'Install or Upgrade NGINX Ingress Controller'
+
+- script: |
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+    helm upgrade --install cert-manager jetstack/cert-manager \
+      --namespace cert-manager \
+      --create-namespace \
+      --set installCRDs=true \
+      --set featureGates="ACMEHTTP01IngressPathTypeExact=false"
+  displayName: 'Install cert-manager with ACME Fix'
+
+- script: |
+     git clone https://github.com/vikranthsuravarapu/Plots-microservice.git plots-microservice
+  displayName: 'Clone Plots Microservice Repo'
+
+- script: |
+     kubectl create namespace viktest || true
+   # kubectl apply -f plots-microservice/project/AKS/secrets.yaml -n viktest
+   # kubectl apply -f plots-microservice/project/AKS/postgress.yaml -n viktest
+   # kubectl apply -f plots-microservice/project/AKS/backend.yaml -n viktest
+   # kubectl apply -f plots-microservice/project/AKS/backendservice.yaml -n viktest
+   # kubectl apply -f plots-microservice/project/AKS/frontend.yaml -n viktest
+   # kubectl apply -f plots-microservice/project/AKS/frontend-service.yaml -n viktest
+  # displayName: 'Deploy Plots Microservice to viktest Namespace'
+
+- script: |
+    kubectl apply -f project/kubernetes/clusterissuer.yaml
+    kubectl apply -f project/kubernetes/postgres-secret.yaml -n viktest
+    kubectl apply -f project/kubernetes/configmap.yaml -n viktest
+    kubectl apply -f project/kubernetes/postgres-deployment.yaml -n viktest
+    kubectl apply -f project/kubernetes/deployment.yaml -n viktest
+    kubectl apply -f project/kubernetes/certificate.yaml -n viktest
+    kubectl apply -f project/kubernetes/ingress.yaml -n viktest
+  displayName: 'Apply Kubernetes Manifests'
+
+- script: |
+    kubectl get pods -n viktest
+    kubectl get ingress -n viktest
+    kubectl describe certificate brickmaster-tls -n viktest
+    kubectl get certificaterequest -n viktest
+  displayName: 'Verify Deployment'

@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: brickmaster-app
+  labels:
+    app: brickmaster-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: brickmaster-app
+  template:
+    metadata:
+      labels:
+        app: brickmaster-app
+    spec:
+      containers:
+      - name: brickmaster-app
+        image: vikky295/c-square:2.5  # ✅ Updated image name
+        ports:
+        - containerPort: 3000
+        env:
+        - name: POSTGRES_HOST
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # ✅ Updated secret name
+              key: host
+        - name: POSTGRES_PORT
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # ✅ Updated secret name
+              key: port
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # ✅ Updated secret name
+              key: database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # ✅ Updated secret name
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # ✅ Updated secret name
+              key: password
+        - name: EMAIL_USER
+          valueFrom:
+            secretKeyRef:
+              name: email-secret
+              key: email_user
+        - name: EMAIL_PASS
+          valueFrom:
+            secretKeyRef:
+              name: email-secret
+              key: email_pass
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: google-secret
+              key: google_client_id
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: google-secret
+              key: google_client_secret
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: brickmaster-service
+spec:
+  selector:
+    app: brickmaster-app
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: ClusterIP

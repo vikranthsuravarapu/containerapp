@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: brickmaster-website-config
+data:
+  WEBSITE_TITLE: "brickmaster | Premium Construction Services"
+  CONTACT_EMAIL: "csquare.co.in@gmail.com"
+  CONTACT_PHONE: "+91 9010011734"
