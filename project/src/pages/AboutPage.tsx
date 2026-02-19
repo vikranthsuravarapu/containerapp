@@ -35,7 +35,10 @@ const AboutPage: React.FC = () => {
           >
             <h1 className="text-4xl md:text-5xl font-bold mb-6">About C-Square Construction</h1>
             <p className="text-xl text-primary-100 mb-8">
-              Building excellence since 2022, we've established ourselves as a trusted name in construction with a commitment to quality and innovation.
+              Since 2022, C‑Square Construction has been committed to building excellence with a strong focus on quality, innovation, and long‑term value. Over the years, we have expanded our footprint across Andhra Pradesh and Telangana, delivering projects that reflect precision, reliability, and modern engineering standards.
+We proudly execute our construction projects across multiple key locations, including Giddalur, Hyderabad, Palavenchi, and Tirupati, ensuring consistent quality and customer satisfaction in every region we serve.
+Driven by a passion for craftsmanship and a dedication to timely delivery, C‑Square Construction continues to grow as a trusted name in residential, commercial, and infrastructure development.
+
             </p>
           </div>
         </div>
