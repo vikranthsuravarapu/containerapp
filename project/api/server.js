@@ -1,6 +1,12 @@
-import appInsights from 'applicationinsights';
-appInsights.setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING).setAutoCollectRequests(true).setAutoCollectExceptions(true).setAutoCollectDependencies(true).setAutoCollectPerformance(true).start();
-import express from 'express';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const appInsights = require('applicationinsights');
+appInsights.setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING)
+  .setAutoCollectRequests(true)
+  .setAutoCollectExceptions(true)
+  .setAutoCollectDependencies(true)
+  .setAutoCollectPerformance(true)
+  .start();import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
