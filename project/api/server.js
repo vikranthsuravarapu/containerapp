@@ -1,3 +1,5 @@
+import appInsights from 'applicationinsights';
+appInsights.setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING).setAutoCollectRequests(true).setAutoCollectExceptions(true).setAutoCollectDependencies(true).setAutoCollectPerformance(true).start();
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
